@@ -17,7 +17,7 @@ public class PersonTag {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    private int order;
+    private int tagOrder;
     private long personId;
     private long cardId;
 

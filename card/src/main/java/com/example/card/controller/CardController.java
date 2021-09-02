@@ -1,6 +1,8 @@
 package com.example.card.controller;
 
+import com.example.card.model.Card;
 import com.example.card.model.CardRequest;
+import com.example.card.model.CardResponse;
 import com.example.card.repository.CardRepository;
 import com.example.card.repository.PersonTagRepository;
 import com.example.card.repository.TagRepository;
@@ -27,8 +29,9 @@ public class CardController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<?> createCard(@RequestBody CardRequest cardRequest) throws Exception{
-        System.out.println(cardRequest.getTitle());
-        return ResponseEntity.ok().body(new String("test"));
+        long authorId = 3;
+        Card card = new Card(cardRequest.getTitle(), cardRequest.getSprintId(), authorId, cardRequest.getIsCard(), cardRequest.getProgress());
+        return ResponseEntity.ok().body(new CardResponse("card is created", card));
     }
     @RequestMapping(value="/ping", method=RequestMethod.GET)
     public ResponseEntity<?> requestMethodName() {

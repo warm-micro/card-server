@@ -14,8 +14,11 @@ import lombok.Setter;
 public class CardRequest implements Serializable{
     private static final long serialVersionUID = 5926468583005150707L;
     private String title;
-    private long springId;
-    private long authorid;
+    private long sprintId;
     private boolean isCard;
     private Progress progress;
+
+    public boolean getIsCard(){
+        return isCard;
+    }
 }
