@@ -7,6 +7,8 @@ import com.example.card.repository.CardRepository;
 import com.example.card.repository.PersonTagRepository;
 import com.example.card.repository.TagRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/card")
 public class CardController {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    
     @Autowired
     private CardRepository cardRepository;
 
@@ -33,6 +37,7 @@ public class CardController {
         Card card = new Card(cardRequest.getTitle(), cardRequest.getSprintId(), authorId, cardRequest.getIsCard(), cardRequest.getProgress());
         return ResponseEntity.ok().body(new CardResponse("card is created", card));
     }
+
     @RequestMapping(value="/ping", method=RequestMethod.GET)
     public ResponseEntity<?> requestMethodName() {
         return ResponseEntity.ok().body(new String("pong"));
