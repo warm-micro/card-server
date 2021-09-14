@@ -35,6 +35,7 @@ public class LogRequestFilter extends OncePerRequestFilter{
         requestParmeters.add(new BasicNameValuePair("api", request.getRequestURI()));
         requestParmeters.add(new BasicNameValuePair("status", String.valueOf(response.getStatus())));
         requestParmeters.add(new BasicNameValuePair("latency", String.valueOf(executionTime)));
+        requestParmeters.add(new BasicNameValuePair("method", request.getMethod()));
 
         httpPost.setEntity(new UrlEncodedFormEntity(requestParmeters));
 
