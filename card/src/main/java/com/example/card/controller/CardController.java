@@ -64,7 +64,7 @@ public class CardController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<?> listCardBySpringId(long sprintId){
+    public ResponseEntity<?> listCardBySprintId(long sprintId){
         List<Card> cards = cardRepository.findBySprintId(sprintId);
         return ResponseEntity.ok().body(new Response("list card", cards));
     }
@@ -79,6 +79,13 @@ public class CardController {
         cardRepository.delete(card);
         return ResponseEntity.ok().body(new Response("card is deleted", null));
     }
+
+    @RequestMapping(value = "/exists/{cardId}", method = RequestMethod.GET)
+    public ResponseEntity<?> existsCard(@PathVariable Long cardId){
+        Optional<Card> cardOptional = cardRepository.findById(cardId);
+        return ResponseEntity.ok().body(new Response("card exists", cardOptional.isPresent()));
+    }
+
     @RequestMapping(value="/ping", method=RequestMethod.POST)
     public ResponseEntity<?> requestMethodName(@RequestHeader Map<String, String> headers) {
         logger.info(headers.get("authorization"));

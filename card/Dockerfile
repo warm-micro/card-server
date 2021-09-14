@@ -5,4 +5,4 @@ COPY ${JAR_FILE} card-0.0.1-SNAPSHOT.jar
 
 EXPOSE 50053
 
-ENTRYPOINT ["java","-jar","/card-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java","-jar","/thread-0.0.1-SNAPSHOT.jar"]
