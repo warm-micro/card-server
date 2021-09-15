@@ -1,5 +1,6 @@
 package com.example.card.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,16 +14,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PersonTag {
+public class PTag {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private int tagOrder;
+    @Column(unique = true)
     private long personId;
-    private long cardId;
+    private long cardOrder;
+    private String color;
 
-    public PersonTag(long personId, long cardId){
+    public PTag(long personId, long cardOrder){
         this.personId = personId;
-        this.cardId = cardId;
+        this.cardOrder = cardOrder;
     }
 }

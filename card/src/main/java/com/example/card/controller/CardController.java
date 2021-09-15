@@ -1,14 +1,20 @@
 package com.example.card.controller;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.example.card.config.JwtUtils;
 import com.example.card.model.Card;
 import com.example.card.model.CardRequest;
 import com.example.card.model.CardResponse;
+import com.example.card.model.PTag;
+import com.example.card.model.PersonTagResponse;
 import com.example.card.model.Response;
+import com.example.card.model.Tag;
 import com.example.card.repository.CardRepository;
 import com.example.card.repository.PersonTagRepository;
 import com.example.card.repository.TagRepository;
@@ -20,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +62,7 @@ public class CardController {
         String username = jwtUtils.getUsernameFromToken(token);
         String userId = cardService.getUserIdFromUsername(username, tokenString);
         if (userId == "-1"){
-            return ResponseEntity.badRequest().body(new CardResponse("wrong username", new Card()));
+            return ResponseEntity.badRequest().body(new Response("wrong username", null));
         }
         long authorId = Integer.parseInt(userId);
         Card card = new Card(cardRequest.getTitle(), cardRequest.getSprintId(), authorId, cardRequest.getIsCard(), cardRequest.getProgress());
@@ -64,9 +71,35 @@ public class CardController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<?> listCardBySprintId(long sprintId){
+    public ResponseEntity<?> listCardBySprintId(@RequestHeader Map<String, String> headers, long sprintId) throws Exception{
+        String tokenString = headers.get("authorization");
         List<Card> cards = cardRepository.findBySprintId(sprintId);
-        return ResponseEntity.ok().body(new Response("list card", cards));
+        List<CardResponse> cardResponses = new ArrayList<>();
+        for(Card card : cards){
+            CardResponse cardResponse = new CardResponse(card);
+            for(PTag pTag : card.getPTags()){
+                Map<String, Object> userInfo = cardService.getUserInfo(pTag.getPersonId(), tokenString);
+                if(userInfo != null){
+                    logger.info("test");
+                    PersonTagResponse pTagResponse = new PersonTagResponse(
+                        Long.parseLong(userInfo.get("id").toString()),
+                        String.valueOf(userInfo.get("username")),
+                        String.valueOf(userInfo.get("nickname")),
+                        String.valueOf(userInfo.get("email")),
+                        String.valueOf(userInfo.get("phoneNumber")),
+                        pTag.getColor()
+                    );
+                    logger.info(pTagResponse.toString());
+                    if(cardResponse.getPTags().isEmpty()){
+                        logger.info("empty");
+                        cardResponse.setPTags(new HashSet<Object>());
+                    } 
+                    cardResponse.getPTags().add(pTagResponse);
+                }
+            }
+            cardResponses.add(cardResponse);
+        }
+        return ResponseEntity.ok().body(new Response("list card", cardResponses));
     }
     
     @RequestMapping(value = "/{cardId}", method = RequestMethod.DELETE)
@@ -86,6 +119,63 @@ public class CardController {
         return ResponseEntity.ok().body(new Response("card exists", cardOptional.isPresent()));
     }
 
+    @PostMapping(value="/{cardId}/ptag")
+    public ResponseEntity<?> postMethodName(@RequestHeader Map<String, String> headers, @PathVariable long cardId, @RequestBody PTag pTagRequest) throws Exception {
+        long personId = pTagRequest.getPersonId();
+        if (!cardService.checkUser(personId, headers.get("authorization"))) {
+            return ResponseEntity.badRequest().body(new Response("wrong person id", null));
+        }   
+        Optional<PTag> oPtag = personTagRepository.findByPersonId(pTagRequest.getPersonId());
+        PTag pTag;
+        if (oPtag.isPresent()){
+            pTag = oPtag.get();
+        } else {
+            personTagRepository.save(pTagRequest);
+            pTag = pTagRequest;
+        }
+        Optional<Card> oCard = cardRepository.findById(cardId);
+        if (!oCard.isPresent()){
+            return ResponseEntity.badRequest().body(new Response("wrong card id", null));
+        }
+        Card card = oCard.get();
+        if (card.getPTags().isEmpty()){
+            Set<PTag> pTags = new HashSet<>();
+            pTags.add(pTag);
+            card.setPTags(pTags);
+        } else{
+            card.getPTags().add(pTag);
+        }
+        cardRepository.save(card);
+        return ResponseEntity.ok().body(new Response("person tag created", card));
+    }
+    
+
+    @PostMapping(value="/{cardId}/htag")
+    public ResponseEntity<?> addTag(@RequestHeader Map<String, String> headers, @PathVariable long cardId, @RequestBody Tag tagRequest) {
+        Optional<Tag> oTag = tagRepository.findByName(tagRequest.getName());
+        Tag tag;
+        if(oTag.isPresent()){
+            tag = oTag.get();
+        } else{
+            tagRepository.save(tagRequest);
+            tag = tagRequest;
+        }
+        Optional<Card> oCard = cardRepository.findById(cardId);
+        if (!oCard.isPresent()){
+            return ResponseEntity.badRequest().body(new Response("wrong card id", null));
+        }
+        Card card = oCard.get();
+        if(card.getHTags().isEmpty()){
+            Set<Tag> tags = new HashSet<>();
+            tags.add(tag);
+            card.setHTags(tags);
+        } else {
+            card.getHTags().add(tag);
+        }
+        cardRepository.save(card);
+        return ResponseEntity.ok().body(new Response("person tag created", card));
+    }
+    
     @RequestMapping(value="/ping", method=RequestMethod.POST)
     public ResponseEntity<?> requestMethodName(@RequestHeader Map<String, String> headers) {
         logger.info(headers.get("authorization"));

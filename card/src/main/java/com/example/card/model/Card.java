@@ -1,11 +1,13 @@
 package com.example.card.model;
 
 import java.util.Date;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -27,7 +29,11 @@ public class Card {
     private boolean isCard;
     private Progress progress;
     private int progressOrder;
-
+    @ManyToMany(targetEntity = PTag.class)
+    private Set<PTag> pTags;
+    @ManyToMany(targetEntity = Tag.class)
+    private Set<Tag> hTags;
+    
     public Card() {}
 
     public Card(String title, long sprintId, long authroId, boolean isCard, Progress progress){
@@ -36,6 +42,9 @@ public class Card {
         this.authorId = authroId;
         this.isCard = isCard;
         this.progress = progress;
+    }
+    public boolean getIsCard(){
+        return isCard;
     }
 }
 

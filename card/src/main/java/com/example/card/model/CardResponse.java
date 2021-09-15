@@ -1,14 +1,33 @@
 package com.example.card.model;
 
-import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
-@AllArgsConstructor
 @Getter
-public class CardResponse implements Serializable {
-    private static final long serialVersionUID = -8091879091924046844L;
-    private final String message;
-    private final Card card;
+@Setter
+public class CardResponse{
+    private long id;
+    private String title;
+    private long sprintId;
+    private long authorid;
+    private boolean isCard;
+    private Progress progress;
+    private int progressOrder;
+    private Set<Object> pTags;
+    private Set<Tag> hTags;
+
+    public CardResponse(Card card){
+        this.id = card.getId();
+        this.title = card.getTitle();
+        this.sprintId = card.getSprintId();
+        this.authorid = card.getAuthorId();
+        this.isCard = card.getIsCard();
+        this.progress = card.getProgress();
+        this.progressOrder = card.getProgressOrder();
+        this.hTags = card.getHTags();
+        this.pTags = new HashSet<>();
+    }
 }
