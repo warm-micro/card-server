@@ -12,11 +12,14 @@ import javax.persistence.ManyToMany;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+// 챗/카드 데이터 정의
 public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -33,8 +36,6 @@ public class Card {
     private Set<PTag> pTags;
     @ManyToMany(targetEntity = Tag.class)
     private Set<Tag> hTags;
-    
-    public Card() {}
 
     public Card(String title, long sprintId, long authroId, boolean isCard, Progress progress){
         this.title = title;

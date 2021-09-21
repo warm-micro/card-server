@@ -22,7 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class LogRequestFilter extends OncePerRequestFilter{
-    final static String LogServer = "http://13.124.188.6:50051/log";
+    final static String LogServer = "http://3.36.122.92:50051/log";
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         long startTime = System.currentTimeMillis();
