@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -176,6 +177,17 @@ public class CardController {
         return ResponseEntity.ok().body(new Response("person tag created", card));
     }
     
+    @PutMapping(value="/flag/{cardId}")
+    public ResponseEntity<?> putMethodName(@PathVariable Long cardId) {
+        Optional<Card> oCard = cardRepository.findById(cardId);
+        if(!oCard.isPresent()){
+            return ResponseEntity.badRequest().body(new Response("wrong card id", null));
+        }
+        Card card = oCard.get();
+        card.setCard(!card.getIsCard());
+        cardRepository.save(card);
+        return ResponseEntity.ok().body(new Response("card flage changed", card));
+    }
     @RequestMapping(value="/ping", method=RequestMethod.POST)
     public ResponseEntity<?> requestMethodName(@RequestHeader Map<String, String> headers) {
         logger.info(headers.get("authorization"));
