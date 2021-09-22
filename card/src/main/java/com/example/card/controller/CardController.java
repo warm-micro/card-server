@@ -7,13 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.example.card.config.JwtUtils;
 import com.example.card.model.Card;
 import com.example.card.model.CardRequest;
 import com.example.card.model.CardResponse;
+import com.example.card.model.OrderReqeust;
 import com.example.card.model.PTag;
 import com.example.card.model.PTagOrder;
+import com.example.card.model.PersonTagOrderResponse;
 import com.example.card.model.PersonTagResponse;
 import com.example.card.model.Progress;
 import com.example.card.model.Response;
@@ -247,17 +250,39 @@ public class CardController {
     @GetMapping(value="/pTagOrder/{sprintId}")
     public ResponseEntity<?> getPTagOrders(@PathVariable Long sprintId) {
         List<PTagOrder> pTagOrders = personTagOrderRepository.findBySprintId(sprintId);
-        return ResponseEntity.ok().body(new Response("order list", pTagOrders));
+        Set<PersonTagOrderResponse> orderLists = new HashSet<>();
+        for(PTagOrder pTagOrder : pTagOrders){
+            orderLists.add(new PersonTagOrderResponse(pTagOrder));
+        }
+        return ResponseEntity.ok().body(new Response("order list", orderLists));
     }
     @PutMapping(value="/pTagOrder/{id}")
-    public ResponseEntity<?> putPTagOrder(@PathVariable Long id, @RequestBody PTagOrder pTagOrderReq) {
+    public ResponseEntity<?> putPTagOrder(@PathVariable Long id, @RequestBody OrderReqeust orders) {
+        logger.info(orders.toString());
         Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findById(id);
         if(!oPTagOrder.isPresent()){
             return ResponseEntity.badRequest().body(new Response("wrong person tag order id", null));
         }
+        String tagOrder = "";
         PTagOrder pTagOrder = oPTagOrder.get();
-        pTagOrder.setTagOrder(pTagOrder.getTagOrder());
+        try {
+            List<Long> orderSet = orders.getTagOrders().stream()
+                            .map(s -> Long.valueOf(s))
+                            .collect(Collectors.toList());
+            for(Long order : orderSet){
+                if(cardRepository.existsById(id)){
+                    if(tagOrder.length() == 0){
+                        tagOrder = order.toString();
+                    } else {
+                        tagOrder += "," +order.toString();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new Response("wrong order string", null));
+        }
+        pTagOrder.setTagOrder(tagOrder);
         personTagOrderRepository.save(pTagOrder);
-        return ResponseEntity.ok().body(new Response("order updated", pTagOrder));
+        return ResponseEntity.ok().body(new Response("order updated", new PersonTagOrderResponse(pTagOrder)));
     }
 }
