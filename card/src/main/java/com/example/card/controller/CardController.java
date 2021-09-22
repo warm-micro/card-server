@@ -1,5 +1,9 @@
 package com.example.card.controller;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -94,7 +98,6 @@ public class CardController {
             for(PTag pTag : card.getPTags()){
                 Map<String, Object> userInfo = cardService.getUserInfo(pTag.getPersonId(), tokenString);
                 if(userInfo != null){
-                    logger.info("test");
                     PersonTagResponse pTagResponse = new PersonTagResponse(
                         Long.parseLong(userInfo.get("id").toString()),
                         String.valueOf(userInfo.get("username")),
@@ -105,7 +108,6 @@ public class CardController {
                     );
                     logger.info(pTagResponse.toString());
                     if(cardResponse.getPTags().isEmpty()){
-                        logger.info("empty");
                         cardResponse.setPTags(new HashSet<Object>());
                     } 
                     cardResponse.getPTags().add(pTagResponse);
@@ -285,4 +287,25 @@ public class CardController {
         personTagOrderRepository.save(pTagOrder);
         return ResponseEntity.ok().body(new Response("order updated", new PersonTagOrderResponse(pTagOrder)));
     }
+    
+    @GetMapping(value="/testing")
+    public ResponseEntity<?> compareLatency(@RequestHeader Map<String, String> headers) throws Exception{
+        String tokenString = headers.get("authorization");
+        Double latencyAverage = 0.0;
+        for(int i = 0; i < 100; ++i){
+            long startTime = System.currentTimeMillis();
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest
+                .newBuilder(URI.create("http://3.36.122.92/card?sprintId=3"))
+                .header("Authorization", tokenString)
+                .headers("Accept", "application/json")
+                .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());   
+            long latency = System.currentTimeMillis() - startTime;
+            latencyAverage += latency;
+        }
+        latencyAverage /= 100;
+        return ResponseEntity.ok().body(new Response("test result", latencyAverage));
+    }
+    
 }
