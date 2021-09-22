@@ -13,11 +13,13 @@ import com.example.card.model.Card;
 import com.example.card.model.CardRequest;
 import com.example.card.model.CardResponse;
 import com.example.card.model.PTag;
+import com.example.card.model.PTagOrder;
 import com.example.card.model.PersonTagResponse;
 import com.example.card.model.Progress;
 import com.example.card.model.Response;
 import com.example.card.model.Tag;
 import com.example.card.repository.CardRepository;
+import com.example.card.repository.PersonTagOrderRepository;
 import com.example.card.repository.PersonTagRepository;
 import com.example.card.repository.TagRepository;
 import com.example.card.service.CardService;
@@ -54,6 +56,9 @@ public class CardController {
 
     @Autowired
     private PersonTagRepository personTagRepository;
+
+    @Autowired
+    private PersonTagOrderRepository personTagOrderRepository;
 
     @Autowired
     private TagRepository tagRepository;
@@ -139,7 +144,12 @@ public class CardController {
             personTagRepository.save(pTagRequest);
             pTag = pTagRequest;
         }
-        Optional<Card> oCard = cardRepository.findById(cardId);
+        logger.info(Long.toString(pTag.getId()));
+        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findByPersonTag(pTag);
+        logger.info("person tag2");
+        PTagOrder personTagOrder = oPTagOrder.isPresent() ? oPTagOrder.get() : new PTagOrder(pTag);
+        logger.info("person tag3");
+        Optional<Card> oCard = cardRepository.findById(cardId); 
         if (!oCard.isPresent()){
             return ResponseEntity.badRequest().body(new Response("wrong card id", null));
         }
@@ -152,6 +162,16 @@ public class CardController {
             card.getPTags().add(pTag);
         }
         cardRepository.save(card);
+
+        String order = personTagOrder.getTagOrder();
+        if(order == null){
+            order = Long.toString(card.getId());
+        } else {
+            order += "," + Long.toString(card.getId());
+        }
+        personTagOrder.setTagOrder(order);
+        personTagOrder.setSprintId(card.getSprintId());
+        personTagOrderRepository.save(personTagOrder);
         return ResponseEntity.ok().body(new Response("person tag created", card));
     }
     
@@ -183,7 +203,7 @@ public class CardController {
     }
     
     @PutMapping(value="/flag/{cardId}")
-    public ResponseEntity<?> putMethodName(@PathVariable Long cardId) {
+    public ResponseEntity<?> changeToIsCard(@PathVariable Long cardId) {
         Optional<Card> oCard = cardRepository.findById(cardId);
         if(!oCard.isPresent()){
             return ResponseEntity.badRequest().body(new Response("wrong card id", null));
@@ -199,7 +219,7 @@ public class CardController {
         return ResponseEntity.ok().body(new String("pong"));
     }
     @GetMapping(value="/search")
-    public ResponseEntity<?> getMethodName(@RequestParam(required = false) String title, @RequestParam(required = false)Long authorId, @RequestParam(required = false) String progress) {
+    public ResponseEntity<?> searchCards(@RequestParam(required = false) String title, @RequestParam(required = false)Long authorId, @RequestParam(required = false) String progress) {
         Map<String, List<Card>> mapResponse = new HashMap<>();
         List<Card> titleSearchResult = new ArrayList<Card>();
         List<Card> authorSearchResult = new ArrayList<Card>();
@@ -208,10 +228,10 @@ public class CardController {
             Progress progressQuery = Progress.valueOf(progress);
             progressSearchResult.addAll(cardRepository.findByProgress(progressQuery));
         } catch (Exception e) {
+
         }
         mapResponse.put("progress", progressSearchResult);
 
-        logger.info(progress.toString());
         if(title  != null){
             titleSearchResult.addAll(cardRepository.findByTitleContaining(title));
         }
@@ -222,5 +242,22 @@ public class CardController {
         mapResponse.put("author", authorSearchResult);
         
         return ResponseEntity.ok().body(new Response("searsh result", mapResponse));
+    }
+
+    @GetMapping(value="/pTagOrder/{sprintId}")
+    public ResponseEntity<?> getPTagOrders(@PathVariable Long sprintId) {
+        List<PTagOrder> pTagOrders = personTagOrderRepository.findBySprintId(sprintId);
+        return ResponseEntity.ok().body(new Response("order list", pTagOrders));
+    }
+    @PutMapping(value="/pTagOrder/{id}")
+    public ResponseEntity<?> putPTagOrder(@PathVariable Long id, @RequestBody PTagOrder pTagOrderReq) {
+        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findById(id);
+        if(!oPTagOrder.isPresent()){
+            return ResponseEntity.badRequest().body(new Response("wrong person tag order id", null));
+        }
+        PTagOrder pTagOrder = oPTagOrder.get();
+        pTagOrder.setTagOrder(pTagOrder.getTagOrder());
+        personTagOrderRepository.save(pTagOrder);
+        return ResponseEntity.ok().body(new Response("order updated", pTagOrder));
     }
 }
