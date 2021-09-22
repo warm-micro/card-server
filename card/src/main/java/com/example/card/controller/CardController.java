@@ -1,6 +1,7 @@
 package com.example.card.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import com.example.card.model.CardRequest;
 import com.example.card.model.CardResponse;
 import com.example.card.model.PTag;
 import com.example.card.model.PersonTagResponse;
+import com.example.card.model.Progress;
 import com.example.card.model.Response;
 import com.example.card.model.Tag;
 import com.example.card.repository.CardRepository;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -32,7 +35,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 
 
 @CrossOrigin(origins = "*")
@@ -192,5 +197,30 @@ public class CardController {
     public ResponseEntity<?> requestMethodName(@RequestHeader Map<String, String> headers) {
         logger.info(headers.get("authorization"));
         return ResponseEntity.ok().body(new String("pong"));
+    }
+    @GetMapping(value="/search")
+    public ResponseEntity<?> getMethodName(@RequestParam(required = false) String title, @RequestParam(required = false)Long authorId, @RequestParam(required = false) String progress) {
+        Map<String, List<Card>> mapResponse = new HashMap<>();
+        List<Card> titleSearchResult = new ArrayList<Card>();
+        List<Card> authorSearchResult = new ArrayList<Card>();
+        List<Card> progressSearchResult = new ArrayList<Card>();
+        try {
+            Progress progressQuery = Progress.valueOf(progress);
+            progressSearchResult.addAll(cardRepository.findByProgress(progressQuery));
+        } catch (Exception e) {
+        }
+        mapResponse.put("progress", progressSearchResult);
+
+        logger.info(progress.toString());
+        if(title  != null){
+            titleSearchResult.addAll(cardRepository.findByTitleContaining(title));
+        }
+        mapResponse.put("title", titleSearchResult);
+        if(authorId != null){
+            authorSearchResult.addAll(cardRepository.findByAuthorId(authorId));
+        }
+        mapResponse.put("author", authorSearchResult);
+        
+        return ResponseEntity.ok().body(new Response("searsh result", mapResponse));
     }
 }
