@@ -23,7 +23,8 @@ public class PTagOrder {
     private PTag personTag;
     private Long sprintId;
 
-    public PTagOrder(PTag pTag){
+    public PTagOrder(PTag pTag, Long sprintId){
         this.personTag = pTag;
+        this.sprintId = sprintId;
     }
 }

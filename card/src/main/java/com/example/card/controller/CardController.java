@@ -1,9 +1,5 @@
 package com.example.card.controller;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -128,6 +124,21 @@ public class CardController {
         cardRepository.delete(card);
         return ResponseEntity.ok().body(new Response("card is deleted", null));
     }
+    @PutMapping(value="/{cardId}")
+    public ResponseEntity<?> putCard(@PathVariable Long cardId, @RequestBody CardRequest cardReq) {
+        Optional<Card> opCard = cardRepository.findById(cardId);
+        if(!opCard.isPresent()){
+            return ResponseEntity.badRequest().body(new Response("wrong chat / card id", null));
+        }
+        Card card = opCard.get();
+        Card updateCard = new Card(cardReq, card.getAuthorId());
+        updateCard.setId(card.getId());
+        updateCard.setCreatedAt(card.getCreatedAt());
+        updateCard.setPTags(card.getPTags());
+        updateCard.setHTags(card.getHTags());
+        cardRepository.save(updateCard);
+        return ResponseEntity.ok().body(new Response("card updated", card));
+    }
 
     @RequestMapping(value = "/exists/{cardId}", method = RequestMethod.GET)
     public ResponseEntity<?> existsCard(@PathVariable Long cardId){
@@ -149,16 +160,16 @@ public class CardController {
             personTagRepository.save(pTagRequest);
             pTag = pTagRequest;
         }
-        logger.info(Long.toString(pTag.getId()));
-        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findByPersonTag(pTag);
-        logger.info("person tag2");
-        PTagOrder personTagOrder = oPTagOrder.isPresent() ? oPTagOrder.get() : new PTagOrder(pTag);
-        logger.info("person tag3");
+        // Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findByPersonTag(pTag);
+        
         Optional<Card> oCard = cardRepository.findById(cardId); 
         if (!oCard.isPresent()){
             return ResponseEntity.badRequest().body(new Response("wrong card id", null));
         }
         Card card = oCard.get();
+        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findByPersonTagAndSprintId(pTag, card.getSprintId());
+        PTagOrder personTagOrder = oPTagOrder.isPresent() ? oPTagOrder.get() : new PTagOrder(pTag, card.getSprintId());
+
         if (card.getPTags().isEmpty()){
             Set<PTag> pTags = new HashSet<>();
             pTags.add(pTag);
@@ -169,11 +180,12 @@ public class CardController {
         cardRepository.save(card);
 
         String order = personTagOrder.getTagOrder();
-        if(order == null){
+        if(order == null || order.length() == 0){
             order = Long.toString(card.getId());
         } else {
             order += "," + Long.toString(card.getId());
         }
+        logger.info(order);
         personTagOrder.setTagOrder(order);
         personTagOrder.setSprintId(card.getSprintId());
         personTagOrderRepository.save(personTagOrder);
@@ -214,7 +226,7 @@ public class CardController {
             return ResponseEntity.badRequest().body(new Response("wrong card id", null));
         }
         Card card = oCard.get();
-        card.setCard(!card.getIsCard());
+        card.setIsCard(!card.getIsCard());
         cardRepository.save(card);
         return ResponseEntity.ok().body(new Response("card flage changed", card));
     }
@@ -254,14 +266,15 @@ public class CardController {
         List<PTagOrder> pTagOrders = personTagOrderRepository.findBySprintId(sprintId);
         Set<PersonTagOrderResponse> orderLists = new HashSet<>();
         for(PTagOrder pTagOrder : pTagOrders){
+            logger.info(pTagOrder.getTagOrder());
             orderLists.add(new PersonTagOrderResponse(pTagOrder));
         }
         return ResponseEntity.ok().body(new Response("order list", orderLists));
     }
-    @PutMapping(value="/pTagOrder/{id}")
-    public ResponseEntity<?> putPTagOrder(@PathVariable Long id, @RequestBody OrderReqeust orders) {
+    @PutMapping(value="/pTagOrder/{pTagId}")
+    public ResponseEntity<?> putPTagOrder(@PathVariable Long pTagId, @RequestBody OrderReqeust orders) {
         logger.info(orders.toString());
-        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findById(id);
+        Optional<PTagOrder> oPTagOrder = personTagOrderRepository.findById(pTagId);
         if(!oPTagOrder.isPresent()){
             return ResponseEntity.badRequest().body(new Response("wrong person tag order id", null));
         }
@@ -271,8 +284,9 @@ public class CardController {
             List<Long> orderSet = orders.getTagOrders().stream()
                             .map(s -> Long.valueOf(s))
                             .collect(Collectors.toList());
+            logger.info(orderSet.toString());
             for(Long order : orderSet){
-                if(cardRepository.existsById(id)){
+                if(cardRepository.existsById(order)){
                     if(tagOrder.length() == 0){
                         tagOrder = order.toString();
                     } else {
@@ -284,28 +298,8 @@ public class CardController {
             return ResponseEntity.badRequest().body(new Response("wrong order string", null));
         }
         pTagOrder.setTagOrder(tagOrder);
+        logger.info(pTagOrder.getTagOrder());
         personTagOrderRepository.save(pTagOrder);
         return ResponseEntity.ok().body(new Response("order updated", new PersonTagOrderResponse(pTagOrder)));
     }
-    
-    @GetMapping(value="/testing")
-    public ResponseEntity<?> compareLatency(@RequestHeader Map<String, String> headers) throws Exception{
-        String tokenString = headers.get("authorization");
-        Double latencyAverage = 0.0;
-        for(int i = 0; i < 100; ++i){
-            long startTime = System.currentTimeMillis();
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest
-                .newBuilder(URI.create("http://3.36.122.92/card?sprintId=3"))
-                .header("Authorization", tokenString)
-                .headers("Accept", "application/json")
-                .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());   
-            long latency = System.currentTimeMillis() - startTime;
-            latencyAverage += latency;
-        }
-        latencyAverage /= 100;
-        return ResponseEntity.ok().body(new Response("test result", latencyAverage));
-    }
-    
 }

@@ -14,4 +14,5 @@ public interface PersonTagOrderRepository extends JpaRepository<PTagOrder, Long>
     Optional<PTagOrder> findById(Long id);
     Optional<PTagOrder> findByPersonTag(PTag pTag);
     List<PTagOrder> findBySprintId(Long sprintId);
+    Optional<PTagOrder> findByPersonTagAndSprintId(PTag pTag, Long sprintId);
 }

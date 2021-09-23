@@ -1,8 +1,8 @@
 package com.example.card.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,8 +19,14 @@ public class PersonTagOrderResponse{
        this.id = pTagOrder.getId();
        this.personTag = pTagOrder.getPersonTag();
        this.sprintId = pTagOrder.getSprintId();
-       this.tagOrder = Arrays.asList(pTagOrder.getTagOrder().split(",")).stream()
-                            .map(s -> Long.parseLong(s))
-                            .collect(Collectors.toList());
+       List<String> tmp  = Arrays.asList(pTagOrder.getTagOrder().split(","));
+       List<Long> tagOrder = new ArrayList<>();
+       for(String t : tmp){
+           try {
+               tagOrder.add(Long.parseLong(t));
+           } catch (Exception e) {
+           }
+       }
+       this.tagOrder = tagOrder;
    }
 }

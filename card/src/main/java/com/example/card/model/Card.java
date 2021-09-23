@@ -1,6 +1,6 @@
 package com.example.card.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,8 +29,9 @@ public class Card {
     private String title;
     private String content;
     private long sprintId;
+    @CreationTimestamp
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     private long authorId;
     private boolean isCard;
     private Progress progress;
@@ -56,6 +59,9 @@ public class Card {
     }
     public boolean getIsCard(){
         return isCard;
+    }
+    public void setIsCard(boolean isCard){
+        this.isCard = isCard;
     }
 }
 

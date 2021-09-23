@@ -1,21 +1,23 @@
 package com.example.card.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class CardResponse{
     private long id;
     private String title;
     private String content;
-    private Date createdAt;
+    private LocalDateTime createdAt;
     private long sprintId;
-    private long authorid;
+    private long authorId;
     private boolean isCard;
     private Progress progress;
     private int progressOrder;
@@ -28,11 +30,17 @@ public class CardResponse{
         this.content = card.getContent();
         this.createdAt = card.getCreatedAt();
         this.sprintId = card.getSprintId();
-        this.authorid = card.getAuthorId();
+        this.authorId = card.getAuthorId();
         this.isCard = card.getIsCard();
         this.progress = card.getProgress();
         this.progressOrder = card.getProgressOrder();
         this.hTags = card.getHTags();
         this.pTags = new HashSet<>();
+    }
+    public boolean getIsCard(){
+        return isCard;
+    }
+    public void setIsCard(boolean isCard){
+        this.isCard = isCard;
     }
 }

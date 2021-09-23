@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
+import java.time.Duration;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,30 +64,31 @@ public class CardService {
                 .uri(URI.create(accountServer + "/user/info/id/" + userId))
                 .header("Authorization", token)
                 .headers("Accept", "application/json")
+                .timeout(Duration.ofSeconds(1))
                 .build();
         HttpResponse<String> response;
-        response = client.send(request,
-            HttpResponse.BodyHandlers.ofString());    
-        if(response.statusCode() != 200){
-            return null;
-        }
-        // while(true){
-        //     try {
-        //         response = client.send(request,
-        //             HttpResponse.BodyHandlers.ofString());    
-        //         if(response.statusCode() != 200){
-        //             return null;
-        //         }
-        //         break;
-        //     } catch (HttpTimeoutException e) { // Timeout Exception 시 다른 서비스로 요청
-        //         logger.info("timeout");
-        //         if(accountServer == accountServer1){
-        //             accountServer = accountServer2;
-        //         } else {
-        //             accountServer = accountServer1;
-        //         }
-        //     }
+        // response = client.send(request,
+        //     HttpResponse.BodyHandlers.ofString());    
+        // if(response.statusCode() != 200){
+        //     return null;
         // }
+        while(true){
+            try {
+                response = client.send(request,
+                    HttpResponse.BodyHandlers.ofString());    
+                if(response.statusCode() != 200){
+                    return null;
+                }
+                break;
+            } catch (HttpTimeoutException e) { // Timeout Exception 시 다른 서비스로 요청
+                logger.info("timeout");
+                if(accountServer == accountServer1){
+                    accountServer = accountServer2;
+                } else {
+                    accountServer = accountServer1;
+                }
+            }
+        }
         
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> map = mapper.readValue(response.body(), Map.class);
