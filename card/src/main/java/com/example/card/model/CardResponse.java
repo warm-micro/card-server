@@ -1,5 +1,6 @@
 package com.example.card.model;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,6 +12,8 @@ import lombok.Setter;
 public class CardResponse{
     private long id;
     private String title;
+    private String content;
+    private Date createdAt;
     private long sprintId;
     private long authorid;
     private boolean isCard;
@@ -22,6 +25,8 @@ public class CardResponse{
     public CardResponse(Card card){
         this.id = card.getId();
         this.title = card.getTitle();
+        this.content = card.getContent();
+        this.createdAt = card.getCreatedAt();
         this.sprintId = card.getSprintId();
         this.authorid = card.getAuthorId();
         this.isCard = card.getIsCard();

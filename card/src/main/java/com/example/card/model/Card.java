@@ -25,6 +25,7 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private String title;
+    private String content;
     private long sprintId;
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -43,6 +44,15 @@ public class Card {
         this.authorId = authroId;
         this.isCard = isCard;
         this.progress = progress;
+    }
+
+    public Card(CardRequest cardRequest, Long authorId){
+        this.title = cardRequest.getTitle();
+        this.content = cardRequest.getContent();
+        this.sprintId = cardRequest.getSprintId();
+        this.authorId = authorId;
+        this.isCard = cardRequest.getIsCard();
+        this.progress = cardRequest.getProgress();
     }
     public boolean getIsCard(){
         return isCard;

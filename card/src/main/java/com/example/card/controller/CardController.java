@@ -83,7 +83,7 @@ public class CardController {
             return ResponseEntity.badRequest().body(new Response("wrong username", null));
         }
         long authorId = Integer.parseInt(userId);
-        Card card = new Card(cardRequest.getTitle(), cardRequest.getSprintId(), authorId, cardRequest.getIsCard(), cardRequest.getProgress());
+        Card card = new Card(cardRequest, authorId);
         cardRepository.save(card);
         return ResponseEntity.ok().body(new Response("card is created", card));
     }
